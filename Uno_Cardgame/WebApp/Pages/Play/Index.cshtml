@@ -1,0 +1,46 @@
+﻿@page
+@using Domain
+@model WebApp.Pages.Play.Index
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>GamePlay</title>
+</head>
+<body>
+<div class="text-center">
+    @if (Model.Engine != null && Model.PlayerId == null)
+    {
+        <h4>Pick a player to control:</h4>
+        @foreach (var p in Model.Engine.State.Players)
+        {
+            var playerLabel = p.NickName + "(" + p.PlayerType + ")";
+            if (p.PlayerType == EPlayerType.Ai)
+            {
+                @playerLabel
+            }
+            else
+            {
+                <a class="btn btn-outline-dark m-1" asp-page="" asp-route-GameId="@Model.GameId" asp-route-PlayerId="@p.PlayerId">
+                    @playerLabel
+                </a>
+            }
+            <br/>
+        }
+        <a class="btn btn-outline-dark m-1" asp-page="" asp-route-GameId="@Model.GameId" asp-route-PlayerId="@Guid.Empty">
+            Watcher
+        </a>
+    }
+</div>
+</body>
+</html>
+
+@section Scripts
+{
+@*     <script> *@
+@*         setInterval(() => { *@
+@*             window.location.reload() *@
+@*         },    1000*5) *@
+@*     </script> *@
+}
+

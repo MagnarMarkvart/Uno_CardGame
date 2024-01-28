@@ -1,0 +1,58 @@
+@page
+@using Domain
+@model IndexModel
+
+@{
+    ViewData["Title"] = "UNO";
+}
+
+<h1>UNO! Game</h1>
+
+<p>
+    <a class="btn btn-outline-dark" asp-page="/Play/StartNewGame">Start New Game</a>
+</p>
+<table class="table">
+    <thead>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Game[0].UpdatedAt)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Game[0].Players)
+        </th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Game) {
+    <tr>
+        <td>
+        <a class="btn btn-outline-dark" asp-page="/Play/Index" asp-route-GameId="@item.GameId">@item.UpdatedAt</a>
+        <td>
+            @foreach (var p in item.Players!)
+            {
+                var playerLabel = p.NickName + "(" + p.PlayerType + ")";
+                @if (p.PlayerType == EPlayerType.Ai)
+                {
+                    <a class="btn btn-outline-dark m-1">
+                        @playerLabel
+                    </a>
+                }
+                else
+                {
+                    <a class="btn btn-outline-dark m-1" asp-page="/Play/Index" asp-route-PlayerId="@p.PlayerId"
+                       asp-route-GameId="@p.GameId">
+                        @playerLabel</a>
+                }
+                <br/>
+            } 
+        </td>
+        <td>
+            @* <a asp-page="./Edit" asp-route-id="@item.GameId">Edit</a> | *@
+            @* <a asp-page="./Details" asp-route-id="@item.GameId">Details</a> | *@
+            @* <a asp-page="./Delete" asp-route-id="@item.GameId">Delete</a> *@
+        </td>
+    </tr>
+}
+    </tbody>
+</table>

@@ -1,0 +1,243 @@
+﻿@page
+@using UI.WebUI
+@using Domain
+@model WebApp.Pages.Play.PlayGame
+
+@{
+    if (Model.PlayerId == Guid.Empty)
+    {
+        ViewData["Title"] = "Watcher";
+    }
+    else
+    {
+        ViewData["Title"] = Model.Engine!.State.Players.Find(p => p.PlayerId == Model.PlayerId)!.NickName;
+    }
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>Game</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" 
+          rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" 
+          crossorigin="anonymous">
+    
+</head>
+<body>
+<div class="text-center">
+    <div class="d-flex justify-content-center">
+        <div class="p-2">
+            @foreach (var player in Model.Engine!.State.Players
+                .Where(player => Model.Engine.State.ShowCurrentPlayer() != player 
+                                 && Model.Engine.State.ShowNextPlayer() != player
+                                 &&                        Model.Player != player))
+            {
+                @player.NickName
+                foreach (var card in player.PlayerHand)
+                {
+                    <img src="~/Images/uno_card_back.png" alt="Card" asp-append-version="true" width="30" height="50"/>
+                }
+            }
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-center">
+        <div class="p-2">
+            Next Player: <b>@Model.Engine!.State.ShowNextPlayer().NickName</b>
+            @foreach (var card in Model.Engine.State.ShowNextPlayer().PlayerHand)
+            {
+                <img src="~/Images/uno_card_back.png" alt="Card" asp-append-version="true" width="30" height="50"/>
+            }
+        </div>
+        @if (Model.Engine.State.ShowCurrentPlayer() != Model.Player)
+        {
+            <div class="p-2">
+                Making a Move: <b>@Model.Engine!.State.ShowCurrentPlayer().NickName</b>
+                @foreach (var card in Model.Engine.State.ShowCurrentPlayer().PlayerHand)
+                {
+                    <img src="~/Images/uno_card_back.png" alt="Card" asp-append-version="true" width="30" height="50"/>
+                }
+            </div>
+        }
+    </div>
+    
+    <div class="d-flex justify-content-center">
+        
+        <div class="p-3">
+            
+            @{
+                var c = Model.Engine.State.CardsOnTable.Peek();
+                var p = @GameBoard.GetImagePath(c);
+            }
+            @if ((int)c.CardValue > 12)
+            {
+                @c.CardColour
+            }
+
+            <img src="@p" alt="@c.ToString()" asp-append-version="true" width="120" height="200"/>
+        </div>
+        
+        <div class="p-3">
+            @if (Model.Player == Model.Engine.State.ShowCurrentPlayer() &&
+                 Model.Player.HasDrawnACard == null)
+            {
+                <form method="POST">
+                    <button class="btn" type="submit"
+                            asp-route-TakeACard=true asp-route-PlayerId=@Model.PlayerId
+                            asp-route-GameId=@Model.GameId>
+                        <img src="~/Images/uno_card_back.png" alt="Card" 
+                             asp-append-version="true" width="120" height="200"/>
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a>
+                    <img src="~/Images/uno_card_back.png" alt="Card" asp-append-version="true" width="120" height="200"/>
+                </a>
+            }
+        </div>
+
+        @if (Model.Engine.State.ShowCurrentPlayer().PlayerType == EPlayerType.Ai)
+        {
+            <div class="p-3">
+                <form method="POST">
+                    <button class="btn btn-outline-dark" type="submit"
+                            asp-route-MakeAiMove=true asp-route-PlayerId=@Model.PlayerId
+                            asp-route-GameId=@Model.GameId>
+                        Make Ai Move
+                    </button>
+                </form>
+            </div>
+        }
+
+        @if (Model.Player == Model.Engine.State.ShowCurrentPlayer() &&
+             Model.Player.HasCalledUno == false &&
+             Model.Player.PlayerHand.Count == 1)
+        {
+            <div class="p-3">
+                <form method="POST">
+                    <button class="btn btn-outline-danger" type="submit"
+                            asp-route-CallUno=true asp-route-PlayerId=@Model.PlayerId
+                            asp-route-GameId=@Model.GameId>
+                        Uno!
+                    </button>
+                </form>
+            </div>
+        }
+
+        @if (Model.Player == Model.Engine.State.ShowCurrentPlayer() &&
+             Model.Player.HasDrawnACard != null)
+        {
+            <div class="p-3">
+                <form method="POST">
+                    <button class="btn btn-outline-danger" type="submit"
+                            asp-route-EndTurn=true asp-route-PlayerId=@Model.PlayerId
+                            asp-route-GameId=@Model.GameId>
+                        End Turn
+                    </button>
+                </form>
+            </div>
+        }
+
+    </div>
+    
+    @if (Model.Player != null)
+    {
+        @if (Model.Engine.State.ShowCurrentPlayer() != Model.Player)
+        {
+            <h5>@Model.Player.NickName, You are not the active player currently. Refresh the page...</h5>
+        }
+        else
+        {
+            if (Model.Player.HasCalledUno)
+            {
+                <h5><b class="text-warning">@Model.Player.NickName</b>, Your Move!</h5>
+            }
+            <h5>@Model.Player.NickName, Your Move!</h5>
+        }
+    }
+    
+    <div class="d-flex justify-content-center">
+        @if (Model.Player != null)
+        {
+            if (Model.Player!.HasDrawnACard != null)
+            {
+                var path = GameBoard.GetImagePath(Model.Player!.HasDrawnACard);
+                <div class="p-2">
+                    <form method="POST">
+                        <button class="btn"
+                                asp-route-Card=@Model.Player!.HasDrawnACard.ToString()
+                                asp-route-PlayerId=@Model.PlayerId
+                                asp-route-GameId=@Model.GameId>
+                            <img src=@path alt=@Model.Player!.HasDrawnACard.ToString()
+                                 asp-append-version="true" width="60" height="100"/>
+                        </button>
+                    </form>
+                </div>
+                return;
+            }
+            if(Model.Player.NeedsToPickAColour)
+            {
+                <form method="POST">
+                    <div class="form-group">
+                        <select class="custom-select" name="ColorSelected" required>
+                            <option value="Green" selected="selected">Green</option>
+                            <option value="Red">Red</option>
+                            <option value="Blue">Blue</option>
+                            <option value="Yellow">Yellow</option>
+                        </select>
+                        <button class="btn btn-outline-dark" type="submit">Submit</button>
+                    </div>
+                </form>
+            }
+            @foreach (var card in Model.Player.PlayerHand)
+            {
+                var path = GameBoard.GetImagePath(card);
+
+                if (Model.Player != Model.Engine.State.ShowCurrentPlayer() ||
+                    Model.Player.NeedsToPickAColour)
+                {
+                    <div class="p-2">
+                        <a>
+                            <img src="@path" alt=@card.ToString() asp-append-version="true" width="60" height="100"/>
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-2">
+                        <form method="POST">
+                            <button class="btn"
+                                    asp-route-Card=@card.ToString() 
+                                    asp-route-PlayerId=@Model.PlayerId
+                                    asp-route-GameId=@Model.GameId>
+                                <img src=@path alt=@card.ToString() asp-append-version="true" width="60" height="100"/>
+                            </button>
+                        </form>
+                    </div>
+                }
+            }
+        }
+        else
+        {
+            @foreach (var card in Model.Engine.State.ShowCurrentPlayer().PlayerHand)
+            {
+                var path = GameBoard.GetImagePath(card);
+                <div class="p-2">
+                    <a>
+                        <img src="@path" alt=@card.ToString() asp-append-version="true" width="60" height="100"/>
+                    </a>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" 
+        crossorigin="anonymous"></script>
+</body>
+</html>

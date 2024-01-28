@@ -1,0 +1,88 @@
+﻿@page
+@model WebApp.Pages.Play.StartNewGame
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>New Game</title>
+</head>
+<body>
+<div class="text-center">
+    @if (Model.HumanCount != null)
+    {
+        <form method="POST">
+            
+            @if (Model.HumanCount != 0)
+            {
+                <h5>Enter NickNames</h5>
+                <br/>
+                @for (var i = 0; i < Model.HumanCount; i++)
+                {
+                    <div class="form-group justify-content-center">
+                        <input type="text" class="form-control" 
+                               id="formGroupNickname@i" placeholder="NickName @i"
+                               name="NickNames[@i]" minlength="2" maxlength="32"
+                               required/>
+                    </div>
+                    <br/>
+                }
+            }
+
+            <h5>Select AI player count:</h5>
+            <div class="form-group justify-content-center">
+                @{
+                    var done = false;
+                    for (var i = 0; i <= 7 - Model.HumanCount; i++)
+                    {
+                        if (Model.HumanCount + i < 2)
+                        {
+                            continue;
+                        }
+
+                        if (!done)
+                        {
+                            <input type="radio" id="count@(i)" name="AiCount" value="@i" checked="checked">
+                            <label for="count@(i)">@i</label>
+                            done = true;
+                            continue;
+                        }
+
+                        <input type="radio" id="count@(i)" name="AiCount" value="@i">
+                        <label for="count@(i)">@i</label>
+                    }
+                }
+            </div>
+            
+            <br/>
+
+            <button class="btn btn-outline-dark" type="submit">Submit</button>
+            
+        </form>     
+    }
+    else
+    {
+        <form method="POST">
+            <h5>Select Human player count:</h5>
+            <div class="form-group justify-content-center">
+                @for (var i = 0; i <= 7; i++)
+                {
+                    if (i.Equals(1))
+                    {
+                        <input type="radio" id="count@(i)" name="HumanCount" 
+                               value="@i" checked="checked">
+                        <label for="count@(i)">@i</label>
+                        continue;
+                    }
+                    <input type="radio" id="count@(i)" name="HumanCount" value="@i">
+                    <label for="count@(i)">@i</label>
+                }
+            </div>
+            <br/>
+            
+            <button class="btn btn-outline-dark" type="submit">Submit</button>
+        </form>
+    }
+</div>
+</body>
+</html>
